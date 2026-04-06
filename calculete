@@ -1,0 +1,84 @@
+import configparser
+import os
+import math
+import unittest
+import tempfile
+import shutil
+
+
+def calculate(a, b, epsilon=0.0001):
+    if not (1e-9 <= epsilon <= 1e-1):
+        raise ValueError("epsilon вне диапазона")
+    if b == 0:
+        raise ZeroDivisionError("деление на ноль")
+    decimals = max(0, math.ceil(-math.log10(epsilon)))
+    return round(a / b, decimals)
+
+def load_params(config_file="settings.ini"):
+    if not os.path.exists(config_file):
+        raise FileNotFoundError("файл не найден")
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    if "SETTINGS" not in config or "epsilon" not in config["SETTINGS"]:
+        raise ValueError("не тот формат файла")
+    try:
+        epsilon = float(config["SETTINGS"]["epsilon"])
+    except ValueError:
+        raise ValueError("epsilon должно быть числом")
+    if not (1e-9 <= epsilon <= 1e-1):
+        raise ValueError("epsilon вне диапазона")
+    return epsilon
+
+
+class TestMyCode(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+        self.config_file = os.path.join(self.test_dir, "settings.ini")
+
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
+  
+
+    def test_calculate_normal(self):
+        print("обычные вычисления")
+        self.assertEqual(calculate(1, 2, 0.1), 0.5)
+        self.assertEqual(calculate(1, 1000, 0.001), 0.001)
+
+    def test_calculate_zero(self):
+        print("деление на ноль")
+        with self.assertRaises(ZeroDivisionError):
+            calculate(1, 0)
+
+    def test_calculate_bad_eps(self):
+        print("ошибка в epsilon")
+        with self.assertRaises(ValueError):
+            calculate(1, 2, 1)
+
+    def test_load_file_not_found(self):
+        print("файл не найден")
+        with self.assertRaises(FileNotFoundError):
+            load_params(os.path.join(self.test_dir, "nofile.ini"))
+
+    def test_load_bad_format(self):
+        print("не тот ini формат")
+        with open(self.config_file, "w") as f:
+            f.write("[BAD]\nvalue=123")
+        with self.assertRaises(ValueError):
+            load_params(self.config_file)
+
+    def test_load_good(self):
+        print("правильный ini")
+        with open(self.config_file, "w") as f:
+            f.write("[SETTINGS]\nepsilon=0.001")
+        self.assertEqual(load_params(self.config_file), 0.001)
+
+    def test_load_wrong_value(self):
+        print("epsilon не число")
+        with open(self.config_file, "w") as f:
+            f.write("[SETTINGS]\nepsilon=abc")
+        with self.assertRaises(ValueError):
+            load_params(self.config_file)
+
+
+if __name__ == "__main__":
+    unittest.main()

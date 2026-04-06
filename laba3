@@ -1,0 +1,29 @@
+
+A = [0.9999998, 1.0000000, 0.5000063, 0.1666674,
+     0.0416350, 0.0083298, 0.0014393, 0.0002040]
+
+def exp_chebyshev(x):
+    """
+    Вычисляет значение e^x для |x| ≤ 1
+    по многочлену Чебышева степени 7.
+    """
+    if abs(x) > 1:
+        raise ValueError("x должен быть в диапазоне |x| ≤ 1")
+
+    result = 0
+    for k in range(8):
+        result += A[k] * (x ** k)
+    return result
+
+# Пример для x = 0.5
+x = 0.5
+approx = exp_chebyshev(x)
+
+print(f"Коэффициенты A = {A}")
+print(f"Приближённое значение e^{x} = {approx}")
+
+# Проверим точность
+import math
+exact = math.exp(x)
+print(f"Точное значение e^{x} = {exact}")
+print(f"Погрешность = {abs(approx - exact)}")

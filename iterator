@@ -1,0 +1,18 @@
+def my_genn():
+
+    while True:
+
+        number_of_fib_elem = yield
+
+        a = 0
+        b = 1
+
+        result = []
+
+        for i in range(number_of_fib_elem):
+
+            result.append(a)
+
+            a, b = b, a + b
+
+        yield result
